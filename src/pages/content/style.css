@@ -1,5 +1,60 @@
 @import "tailwindcss";
 
 .your-class {
-    color: aliceblue;
+  color: aliceblue;
+}
+
+.fakemetrics-overlay {
+  position: absolute;
+  z-index: 2147483647;
+  width: 240px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 8px;
+}
+
+/* Mask class applied early to prevent FOUC of real text */
+.fakemetrics-mask {
+  color: transparent !important;
+}
+
+.fakemetrics-input {
+  width: 100%;
+  height: 80px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.fakemetrics-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.fakemetrics-btn {
+  background: #111827;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.fakemetrics-btn.secondary {
+  background: #6b7280;
+}
+
+/* Global early hide; will be toggled by adding .fm-unhide on <html> */
+html {
+  visibility: hidden !important;
+}
+
+html.fm-unhide {
+  visibility: visible !important;
 }

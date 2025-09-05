@@ -1,0 +1,200 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Code Standards to be followed
+globs:
+alwaysApply: true
+---
+# Core Coding Standards
+
+## Tailwind CSS v4 Standards
+
+- Use `@import "tailwindcss"` instead of `@tailwind` directives
+- Use CSS variables for theme values instead of the `theme()` function when possible
+- Use `@config` directive to reference JavaScript config files when needed
+- Be mindful of hover styles on mobile as v4 only applies them on devices that support hover
+- Use `@utility` instead of `@layer utilities` for custom utilities
+- For arbitrary values with CSS variables, use parentheses syntax `bg-(--brand-color)` instead of square brackets
+
+## Critical Rules
+
+- **Package Manager**: Use `pnpm` for all package management tasks.
+- **Script Runner**: Use `bun` for executing all standalone TypeScript script files (e.g., `bun run scripts/my-script.ts`).
+- **Script Management**: For simple, one-line commands, add them directly to the `scripts` object in `package.json`. For complex tasks, create a dedicated `.ts` file in a `scripts/` directory and invoke it from `package.json` using `bun`.
+- **Monorepo Structure**: Place reusable code in packages under `packages/` and applications under `apps/`.
+- **Package Naming**: Name all packages under the `@sassy/` scope (e.g., `@sassy/utils`, `@sassy/ui`).
+- **File/Directory Naming**: Use `kebab-case` for all file and directory names (e.g., `src/lib/utils.ts`, `src/components/user-profile`).
+- **Environment Variables in Monorepo**: Packages cannot directly access root `.env` files due to working directory isolation. Always add `dotenv-cli` as devDependency and create `"with-env": "dotenv -e ../../.env --"` script. Prefix package scripts needing environment variables with `pnpm with-env` to load root environment variables. This prevents runtime errors for DATABASE_URL, AWS credentials, or other root-level environment variables.
+- **TypeScript Usage**: All new code MUST be written in TypeScript (`.ts` or `.tsx`).
+- **Constant Definitions**: Use `UPPER_SNAKE_CASE` along with `as const` for defining read-only object literals or arrays that represent fixed collections or configurations.
+- **Function Style**: Prefer fat arrow functions (`=>`) over the `function` keyword for consistency, especially for callbacks and inline functions. Named exports or React components may use the `function` keyword where appropriate.
+- **Barrel Files**: Avoid creating new barrel files (`index.ts` files that only re-export from other modules). Aim to refactor existing ones where practical by importing directly from the source module. *Note: Existing barrel files are present in the codebase.*
+- **Extensibility**: Design components and systems with extensibility in mind, often using plugin architectures or similar patterns where appropriate.
+- **Factory Patterns**: Utilize factory functions or patterns when creating complex objects or when object creation logic needs to be centralized or abstracted (e.g., for dependency injection or different implementations).
+- **Error Handling**: Use specific error types. Prefer standard `Error` objects for generic issues and create custom error classes (extending `Error`) for domain-specific or operational errors. Log errors appropriately, providing sufficient context.
+- **Documentation (JSDoc)**: Add JSDoc comments to exported functions, classes, and complex types *after* the implementation is complete and verified. Include `@param`, `@returns`, and clear `@example` tags where helpful. Focus on clarity and practical usage examples.
+
+## Examples
+
+<example>
+  ```typescript
+  // packages/data-models/package.json
+  {
+    "name": "@sassy/data-models",
+    "version": "1.0.0",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+      "build": "tsup",
+      "dev": "tsup --watch"
+    },
+    "devDependencies": {
+      "tsup": "^8.0.0",
+      "@sassy/typescript-config": "workspace:*"
+    }
+  }
+
+  // packages/data-models/src/user-profile.ts
+  export const USER_ROLES = ['admin', 'editor', 'viewer'] as const;
+  export type UserRole = typeof USER_ROLES[number];
+
+  export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    // implementation...
+    return null;
+  };
+
+  // Importing directly, avoiding barrel files
+  import { fetchUserProfile } from '@sassy/data-models/src/user-profile';
+
+  // Basic Factory Example
+  interface Plugin {
+    initialize: () => void;
+  }
+  function createAnalyticsPlugin(config: any): Plugin {
+    return {
+      initialize: () => console.log('Plugin initialized with config:', config),
+    };
+  }
+  const googleAnalyticsPlugin = createAnalyticsPlugin({ trackingId: 'UA-123' });
+
+  // Basic Extensibility/Plugin Usage
+  class AnalyticsSystem {
+    private plugins: Plugin[] = [];
+
+    registerPlugin(plugin: Plugin) {
+      this.plugins.push(plugin);
+    }
+
+    initialize() {
+      this.plugins.forEach(p => p.initialize());
+    }
+  }
+
+  const analytics = new AnalyticsSystem();
+  analytics.registerPlugin(googleAnalyticsPlugin);
+  analytics.initialize();
+
+  // Custom Error Example
+  class UserNotFoundError extends Error {
+    constructor(userId: string) {
+      super(`User with ID "${userId}" not found.`);
+      this.name = 'UserNotFoundError';
+    }
+  }
+
+  /**
+   * Fetches user data or throws a specific error.
+   * @param userId The ID of the user to fetch.
+   * @returns The user profile.
+   * @throws {UserNotFoundError} If the user cannot be found.
+   * @example
+   * try {
+   *   const user = await getUserProfile('123');
+   *   console.log(user.name);
+   * } catch (error) {
+   *   if (error instanceof UserNotFoundError) {
+   *     console.error(error.message); 
+   *   } else {
+   *     // Handle other errors
+   *     logger.error('Failed to fetch user profile', { userId: '123', error });
+   *   }
+   * }
+   */
+  async function getUserProfile(userId: string): Promise<UserProfile> {
+    const user = await db.users.findUnique({ where: { id: userId } });
+    if (!user) {
+      // Log the error with context before throwing
+      logger.warn('User lookup failed', { userId }); 
+      throw new UserNotFoundError(userId);
+    }
+    return user;
+  }
+  ```
+</example>
+
+<example type="invalid">
+  ```typescript
+
+  // Using a different build tool
+  // "build": "tsc"
+
+  // Incorrect package name
+  // { "name": "myPackage" }
+
+  // Incorrect file naming
+  // src/components/UserProfile.tsx
+
+  // Using 'function' keyword unnecessarily
+  function getUserData(id) {
+    // ...
+  }
+
+  // Using mutable object for constants
+  export const Config = {
+    API_URL: 'http://example.com', // Can be accidentally mutated
+  };
+
+  // Creating a new barrel file
+  // packages/new-feature/index.ts
+  export * from './module-a';
+  export * from './module-b';
+
+  // Tightly coupled code, hard to extend
+  class ReportGenerator {
+    generatePdfReport() {
+      // Specific PDF generation logic...
+    }
+    // Adding CSV would require modifying this class directly
+  }
+
+  // Direct instantiation where a factory might be better
+  const complexObject = new ComplexObject(dep1, new AnotherDep(), config.setting);
+  // vs.
+  // const complexObject = complexObjectFactory.create(config);
+
+  // Vague error handling
+  function doSomethingRisky() {
+    try {
+      // ... operation ...
+    } catch (e) {
+      throw new Error("Something went wrong"); // Too generic
+    }
+  }
+
+  // Adding JSDoc prematurely to unfinished code
+  /**
+   * @param a - First number (TODO: implement)
+   * @returns The sum (TODO: check logic)
+   * @example
+   * add(1, 2) // Expected: 3 (TODO: write test)
+   */
+  const add = (a: number, b: number) => {
+    // WIP
+    return a - b; // Incorrect logic, documented too early
+  }
+  ```
+</example>

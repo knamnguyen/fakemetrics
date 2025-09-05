@@ -1,20 +1,31 @@
-import { createRoot } from 'react-dom/client';
-import './style.css' 
-const div = document.createElement('div');
-div.id = '__root';
-document.body.appendChild(div);
+import "./style.css";
+import { createEditController } from "./edit-controller";
+import { getPageKey } from "../../lib/storage";
 
-const rootContainer = document.querySelector('#__root');
-if (!rootContainer) throw new Error("Can't find Content root element");
-const root = createRoot(rootContainer);
-root.render(
-  <div className='absolute bottom-0 left-0 text-lg text-black bg-amber-400 z-50'  >
-    content script <span className='your-class'>loaded</span>
-  </div>
-);
+const controller = createEditController();
 
-try {
-  console.log('content script loaded');
-} catch (e) {
-  console.error(e);
-}
+controller.init();
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message && message.type === "FAKEMETRICS_TOGGLE") {
+    if (message.enable) controller.enable();
+    else controller.disable();
+    sendResponse({
+      type: "FAKEMETRICS_TOGGLE_ACK",
+      enabled: Boolean(message.enable),
+    });
+    return true;
+  }
+  if (message && message.type === "FAKEMETRICS_GET_STATE") {
+    const state = { enabled: controller.getState().enabled };
+    sendResponse({ type: "FAKEMETRICS_STATE", ...state });
+    return true;
+  }
+  if (message && message.type === "FAKEMETRICS_REAPPLY") {
+    controller.handleReapply();
+    sendResponse({ ok: true });
+    return true;
+  }
+});
+
+// Masking/unhide handled within controller.init()

@@ -1,0 +1,239 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# T3 Turbo Stack Architecture Overview
+
+This project is built using the T3 Turbo Stack - a full-stack, typesafe monorepo template leveraging the best technologies in the modern web development ecosystem.
+
+## Core Technologies
+
+### Monorepo Structure
+
+- **Turborepo**: Build system for JavaScript/TypeScript monorepos
+- **pnpm**: Fast, disk space efficient package manager
+- **TypeScript**: Strongly typed JavaScript superset across the entire codebase
+
+### Frontend (apps/nextjs)
+
+- **Next.js**: React framework using the App Router architecture
+- **Tailwind CSS v4**: Utility-first CSS framework with modern CSS features
+- **shadcn/ui**: Reusable UI components built with Radix UI and Tailwind
+
+### Tailwind CSS v4 Integration
+
+The project uses Tailwind CSS v4 with the following setup:
+- `@tailwindcss/postcss` for PostCSS integration
+- CSS-based configuration with `@import` and `@config` directives
+- Shared configuration in `tooling/tailwind` package
+- Content detection across multiple packages
+- Browser support for modern browsers (Safari 16.4+, Chrome 111+, Firefox 128+)
+
+### Backend & Data Layer
+
+- **Supabase**: PostgreSQL database with a rich ecosystem of tools
+- **Prisma**: Type-safe ORM with auto-generated client
+- **tRPC**: End-to-end typesafe API layer connecting frontend and backend using the latest integration with react-query
+- **Zod**: TypeScript-first schema validation
+
+### Authentication & Payments
+
+- **Clerk**: Complete user management and authentication solution
+- **Stripe**: Payment processing for subscriptions and one-time payments
+
+## Code Organization
+
+### Apps Directory
+
+- `/apps/nextjs`: Main Next.js application with App Router
+- (Future) `/apps/expo`: React Native mobile application
+
+### Packages Directory
+
+- `/packages/api`: tRPC router definitions and API endpoints
+- `/packages/db`: Prisma schema, client configuration, and migrations
+- `/packages/ui`: Shared UI components using shadcn/ui
+- `/packages/validators`: Shared Zod validation schemas
+- `/packages/stripe`: Stripe service implementation
+
+### Service Co-location Principle
+
+Services should be co-located with their domain logic rather than grouped by framework or infrastructure concerns:
+
+**✅ Correct**: Place services in their domain package
+- `packages/remotion/src/remotion-service.ts` - Handles Remotion Lambda operations
+- `packages/stripe/src/stripe-service.ts` - Handles Stripe operations  
+- `packages/gemini-video/src/gemini-video-service.ts` - Handles Gemini video processing
+
+**❌ Incorrect**: Grouping services by framework
+- `packages/api/src/services/remotion-service.ts` - Has no tRPC dependencies
+- `packages/api/src/services/stripe-service.ts` - Only used by API, but could be reused
+
+**Benefits of Domain Co-location:**
+- **Reusability**: Services can be imported by both API endpoints and standalone scripts
+- **No Code Duplication**: Single source of truth for business logic
+- **Clear Dependencies**: Service dependencies are explicit and domain-focused
+- **Better Testing**: Domain services can be tested independently of API layer
+
+**Implementation Pattern:**
+```typescript
+// packages/domain/src/domain-service.ts
+export class DomainService {
+  // Business logic here
+}
+
+// packages/domain/src/index.ts  
+export { DomainService } from './domain-service';
+export type { DomainServiceTypes } from './domain-service';
+
+// Usage in API
+import { DomainService } from '@sassy/domain';
+
+// Usage in scripts
+import { DomainService } from '@sassy/domain';
+```
+
+## Architectural Patterns
+
+1. **Type Safety**: All communication between services is fully typed
+2. **API Layer**: tRPC connects frontend and backend with type-safe queries and mutations
+3. **Database Access**: Prisma provides type-safe database access with migrations
+4. **Auth Flow**: Clerk handles authentication with middleware protection
+5. **Component Library**: shadcn/ui components are customized and extended for the application
+
+## Building implementation
+
+- In this turbo repo, we typically export everything again in each package from a barrel index.ts file. So that we could import stuffs from packages like "import { someSchema} from "@sassy/validators" 
+
+- We need to run pnpm build inside each package everytime we make an update so typescript knows, or regenerate database client and push so that the imports work in other apps where they are imported.
+
+##Third-party services:
+
+- When integrating services like Stripe and Clerk, store only foreign IDs in each system (e.g., {stripeCustomerId: "cus_123"} in Clerk, {clerkUserId: "user_456"} in Stripe). 
+- Each service should remain the source of truth for its domain, minimizing synchronization by fetching fresh data (like auth state, email, access status, subscription plan) when needed versus maintaining duplicate state. 
+- Since Clerk is handling userinfo, basic info like username, email, etc should always be queried from Clerk
+- Only local things with custom features should be included in our app's db's User table
+- Focus webhooks on maintaining relationship integrity rather than mirroring complete data structures. This approach creates a resilient system that properly separates concerns.
+
+## tRPC Implementation
+
+### Server-Side
+
+- tRPC routers defined in `packages/api/src/router/`
+- Router procedures defined as `publicProcedure` or `protectedProcedure` (with auth middleware)
+- Context includes database access and user authentication via Clerk
+- Server-side API caller available via `createServerClient()` for internal operations
+
+### Client-Side (Next.js App)
+
+- Client setup in `apps/nextjs/src/trpc/` with integration for both client and server components
+- Uses `createTRPCContext` from `@trpc/tanstack-react-query` for React Query integration
+- Client exposes `useTRPC` hook for accessing tRPC procedures
+- Example usage pattern:
+
+  ```tsx
+  // Client component
+  const trpc = useTRPC();
+
+  // For queries (with all react-query features)
+  const { data, isLoading } = useQuery(
+    trpc.someRouter.someQuery.queryOptions(),
+  );
+
+  // For mutations
+  const { mutateAsync, isPending } = useMutation(
+    trpc.someRouter.someMutation.mutationOptions({
+      onSuccess: () => {
+        // Handle success (e.g., invalidate queries)
+      },
+    }),
+  );
+  ```
+
+### Server Components
+
+- Server components use `prefetch` and `HydrateClient` for data fetching
+- Example server component usage:
+
+  ```tsx
+  // Server component
+  prefetch(trpc.someRouter.someQuery.queryOptions());
+
+  return (
+    <HydrateClient>
+      <ClientComponent />
+    </HydrateClient>
+  );
+  ```
+
+
+
+## Development Guidelines
+
+1. Follow directory-specific patterns when adding new features
+2. When extending the application, add new tRPC router endpoints to `packages/api/src/router`
+3. Database schema changes should be made in `packages/db/prisma/schema.prisma`
+4. UI components should be added to `packages/ui/src/components`
+5. Shared validation logic belongs in `packages/validators/src`
+
+## Environment Variable Management
+
+### Turborepo Monorepo Pattern
+
+In Turborepo monorepos, packages operate in isolation and cannot directly access root `.env` files due to working directory context. This is a critical pattern that prevents runtime failures when packages need environment variables like `DATABASE_URL`, AWS credentials, or other configuration.
+
+### Required Setup for New Packages
+
+When creating packages that need environment variables:
+
+1. **Add dotenv-cli dependency**:
+   ```json
+   "devDependencies": {
+     "dotenv-cli": "^8.0.0"
+   }
+   ```
+
+2. **Create with-env script**:
+   ```json
+   "scripts": {
+     "with-env": "dotenv -e ../../.env --"
+   }
+   ```
+
+3. **Prefix scripts that need environment variables**:
+   ```json
+   "scripts": {
+     "my-script": "pnpm with-env bun scripts/my-script.ts",
+     "process-data": "pnpm with-env scripts/process-data.ts --options"
+   }
+   ```
+
+### Why This Pattern is Necessary
+
+- **Working Directory Isolation**: Scripts run from `/packages/package-name/` but `.env` is in `/project-root/`
+- **Bun Limitation**: Even though Bun has built-in `.env` loading, it looks in current directory, not monorepo root
+- **Workspace Context**: Turborepo workspaces don't automatically propagate environment variables from root
+- **Runtime Error Prevention**: Without this pattern, scripts fail with "Environment variable not found" errors
+
+### Usage Examples
+
+```bash
+# ✅ Correct - loads root .env
+pnpm my-script --param value
+
+# ❌ Incorrect - won't find root .env
+bun scripts/my-script.ts --param value
+```
+
+## Future Extensions
+
+1. React Native with Expo will be added to the `/apps` directory
+2. Email functionality will be implemented using a service like Resend or SendGrid
+3. Additional authentication providers may be integrated through Clerk

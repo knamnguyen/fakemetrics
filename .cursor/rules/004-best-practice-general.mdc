@@ -1,0 +1,120 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+You are an expert on web development in both frontend and backend.
+
+You should take best practices into consideration when RELEVANT & NECESSARY to help me become the ultimate web developer of all time. These best practices include, but not limited to:
+
+**Nextjs and React best practices**
+1. Constants / Hard-coded values / Magic values: Extract magic numbers and strings to constants for easier management; define constants in a separate file or at the top of the file.
+2. Folder Structure: Organize files consistently; group related components, utilities, hooks, and context in separate folders.
+3. Components: When to Create Them: Create components for reusable or distinct pieces of UI; use components even for non-reusable parts to improve organization.
+4. Avoid Unnecessary Markup (divs): Use fragments (<>...) instead of unnecessary div elements to avoid cluttering the DOM.
+5. Don't Add Layout Styles to Reusable Components: Avoid adding layout-specific styles to reusable components; use wrapper elements or pass class names as props for layout styles.
+6. Use TypeScript: Utilize TypeScript for better type safety and developer experience; define proper types for props and state to catch errors early.
+7. Keep Components Simple (Children Pattern, Updater Function for useState): Use the children pattern to pass JSX elements; prefer the functional form of useState when new state depends on the previous state.
+8. Don't Use Setter Function from useState Directly: Create handler functions for state updates instead of passing setters directly.
+9. Naming Props (When Prop Is a Function): Name props that are functions starting with "on" (e.g., onAddTodo).
+10. useMemo, useCallback & React.memo() for Performance: Use useMemo for expensive calculations, useCallback to memoize functions, and React.memo to prevent unnecessary re-renders.
+11. When to Use Updater Function from useState: Use the updater function form of useState when the update depends on the previous state.
+12. Use Single State Instead of Multiple States: Combine related states into a single state object to simplify state management.
+13. One Source of Truth in Programming: Track selected/active items by their ID, not by duplicating the whole object.
+14. Use the URL for Some State (Filters, Pagination, etc.), Not useState: Store filter and pagination states in the URL for better shareability and bookmarking.
+15. Keep useEffect Simple: One Concern per useEffect: Separate different concerns into multiple useEffect hooks.
+16. Instead of Fetching Data in useEffect, Consider Alternatives: Use third-party libraries like React Query for data fetching and caching.
+17. Improve Overall Structure with Components, Custom Hooks, and Utility Functions: Extract reusable logic into custom hooks and use utility functions for non-React-specific logic.
+18. Calling Route Handlers from Server Components: Avoid calling route handlers from server components; instead, directly use functions to fetch data securely on the server.
+19. Static or Dynamic Route Handlers: Understand when to use static versus dynamic route handlers; static by default, dynamic when handling incoming requests or post requests.
+20. Route Handlers and Client Components: Use server actions in client components to avoid unnecessary route handlers and streamline code.
+21. Using Suspense with Server Components: Properly place suspense boundaries above data-fetching components to ensure correct loading states and future partial pre-rendering.
+22. Using the Incoming Request: Utilize headers, cookies, params, and search params functions to access incoming request information in server components.
+23. Using Context Providers with App Router: Place context providers correctly, ideally in the root layout, to maintain server components and avoid unnecessary client components.
+24. Using Server and Client Components Together: Understand the relationship between server and client components; server components can have client component children without needing "use client”.
+25. Adding “use client” Unnecessarily: Avoid overusing "use client"; it applies to the component and its children, but not necessary if already in a client component.
+26. Not Revalidating Data After Mutations: Ensure to revalidate data after mutations by revalidating paths or cache tags to see updated data.
+27. Redirects Inside of Try/Catch Blocks: Avoid throwing redirects inside try/catch blocks; place redirects at the conclusion or in a finally block to prevent errors.
+28. Place "use client" Directive Only Where Necessary: Avoid unnecessary client-side rendering and increased bundle size.
+29. Refactor Components Properly When Adding "use client": Avoid turning unnecessary components into client components.
+30. Do Not Assume a Component is a Server Component Just Because it Lacks the "use client" Directive: Check imports.
+31. Wrapping a Server Component with a Client Component Does Not Convert it into a Client Component: They can coexist.
+32. Avoid Using State Management Libraries (Context API, Zustand, Redux) in Server Components: They are meant for client-side state.
+33. Do Not Use "use server" to Force a Server Component: It creates server actions, not server components.
+34. Be Cautious Not to Leak Sensitive Data from Server to Client: Avoid passing it through props.
+35. Understand That Client Components Also Run on the Server Once During Pre-rendering.
+36. Avoid Using Browser APIs like localStorage Directly in Components: Use proper checks to prevent server-side errors.
+37. Handle Hydration Errors: Ensure server-rendered HTML matches the client-rendered HTML.
+38. Properly Manage Third-Party Components: Ensure they are client components if they use hooks or event handlers.
+39. Avoid Using Route Handlers for Data Fetching: Fetch data directly in server components.
+40. Fetching the Same Data in Multiple Places is Fine: Due to React and Next.js caching mechanisms.
+41. Prevent Data Fetching Waterfalls: Initiate multiple fetches in parallel using Promise.all.
+42. Do Not Submit Data to Server Components or Route Handlers: Use server actions for data mutations.
+43. Ensure the UI Reflects Data Mutations: Invalidate caches or revalidate paths.
+44. Server Actions Can Be Used in Client Components: They are not limited to server components.
+45. Always Validate and Protect Server Actions: Avoid security risks.
+46. Do Not Misuse the "use server" Directive: Use server-only package instead.
+47. Understand Dynamic Routes (params) and Search Parameters (searchParams): For correct usage in components.
+48. Work Correctly with searchParams: Avoid unnecessary server-side requests and improve performance.
+49. Always Consider Loading States for Better User Experience: Use suspense and loading components.
+50. Be Granular with Suspense Boundaries: Avoid blocking the entire page while waiting for specific data.
+51. Place Suspense Components Correctly: Ensure they wrap the parts of the UI that need to wait for data.
+52. Always Use the Key Prop with Suspense: Ensure it re-renders correctly when the data changes.
+53. Avoid Accidentally Opting a Page Out of Static Rendering: Avoid using dynamic features like searchParams, cookies, or headers.
+54. Do Not Hardcode Secrets: Use environment variables to manage sensitive information securely.
+55. Clearly Distinguish Between Client and Server Utilities: Use conventions like server-only to prevent misuse.
+56. State Updates Aren't Immediate: Use the updater function for state changes dependent on the previous state to ensure accurate updates.
+57. Conditional Rendering: Avoid calling hooks conditionally; ensure hooks are called in the same order with each render.
+58. Updating Object State: Use the spread operator to maintain other properties when updating a single property in an object state.
+59. Single Object State: Use a single object to manage multiple related state values, rather than creating separate state variables for each.
+60. Derivable State: Avoid using state for values that can be derived from existing state or props; calculate these values directly in the render.
+61. Primitives vs. Non-primitives: Understand that non-primitive values (objects, arrays) are passed by reference, which can lead to unnecessary re-renders.
+62. Initializing State with Objects: Initialize object state with null or an empty object to avoid undefined errors and use optional chaining or loading states.
+63. TypeScript Mistakes: Explicitly define types for state variables that can have multiple types (e.g., null and an object) to leverage TypeScript's type-checking benefits.
+64. Not Using Custom Hooks: Refactor common logic involving hooks into custom hooks to avoid code duplication and improve readability.
+65. Server & Client Components: Use use client directive in Next.js for components that use client-side features or hooks; avoid using hooks in server components.
+66. Stale Closures: Ensure interval functions or similar use the latest state values by using the state updater function or by properly managing dependencies and cleanup.
+67. Fetching in useEffect: Avoid fetching data directly in useEffect; use libraries like React Query or SWR for data fetching to handle caching, loading, and error states effectively.
+
+**Code Writing and Organization**
+1. Use consistent naming conventions
+2. Break code into reusable modules
+3. Avoid code duplication (DRY principle)
+4. Strive for simplicity (KISS principle)
+5. Don't add unnecessary functionality (YAGNI principle)
+6. Regularly refactor code
+7. Follow coding standards in each language and frameworks
+8. Separate concerns (HTML, CSS, JavaScript, etc)
+9. Each module should have a single responsibility (SRP)
+10. Decouple components with dependency injection
+11. Write declarative code
+12. Develop in a component-driven manner
+13. Apply functional programming concepts
+14. Consider the Elm architecture for web apps
+
+**Debugging and Error Handling**
+1. Implement robust error handling
+2. Use error logging and monitoring
+3. Implement error boundaries in UI components
+4. Implement centralized logging
+5. Build observability into the system
+
+**UX/UI**
+1. Ensure responsive and accessible design
+2. Use progressive enhancement
+3. Design with a mobile-first approach
+4. Follow UX principles and guidelines
+5. Use atomic design principles
+6. Extract component logic into reusable hooks (in react)
+
+**Performance Optimization**
+1. Implement caching strategies
+2. Use lazy loading for resources
+3. Consider server-side rendering (SSR)
+4. Split code and load chunks on-demand
+5. Apply data compression techniques
+6. Implement API caching
+7. Use throttling and debouncing for resource-heavy operations
+8. Pre-render static HTML for better performance and SEO
+9. Use content hashing for cache busting
+10. Handle long-running tasks with queueing systems and background processing
